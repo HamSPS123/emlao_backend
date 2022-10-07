@@ -6,7 +6,7 @@ import * as moment from 'moment';
 import { dateFormat } from 'src/config/date.config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Order, OrderDocument } from './entities/order.entity';
-import mongoose, { isValidObjectId, Model, mongo } from 'mongoose';
+import mongoose, { isValidObjectId, Model } from 'mongoose';
 import { errorMessages } from 'src/config/message.config';
 import { User } from 'src/core/users/entities/user.entity';
 import { randomNumber } from 'src/common/utils/utils';
@@ -91,6 +91,49 @@ export class OrdersService {
         throw new HttpException(error.message, error.status);
       }
 
+      throw new InternalServerErrorException(errorMessages[500]);
+    }
+  }
+
+  async test(shop: any) {
+    try {
+      const filter = { shop: shop?._id };
+      const test = this.orderModel.aggregate([
+        { $unwind: '$orderDetail' },
+        { $match: filter },
+        {
+          $lookup: {
+            from: "products",
+            localField: "orderDetail.product",
+            foreignField: "_id",
+            as: "products",
+          }
+        },
+        { $unwind: '$products' },
+        {
+          $lookup: {
+            from: "categories",
+            localField: "products.category",
+            foreignField: "_id",
+            as: "categories"
+          }
+        },
+
+        {
+          $group: {
+            _id: '$orderDetail.product',
+            // product: { $addToSet: '$products.name' },
+            // category: { $addToSet: '$categories.name' },
+            total: { $sum: { $toDouble: '$orderDetail.quantity' } },
+          }
+        },
+        { $project: { 'products.name': 1, 'categories.name': 1, total: 1 } },
+        { $sort: { total: -1 } },
+        { $limit: 5 }
+      ])
+      return test;
+    } catch (error) {
+      console.log(error);
       throw new InternalServerErrorException(errorMessages[500]);
     }
   }

@@ -2,12 +2,13 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import mongoose from "mongoose";
 import { decimalToJson } from "src/common/utils/mongo-getter";
+import { stringToObject } from "src/common/utils/mongo-setter";
 
 export type OrderDocument = Order & Document;
 
 @Schema({ _id: false })
 export class OrderDetail {
-    @Prop({ required: true, ref: 'Product' })
+    @Prop({ required: true, ref: 'Product', set: stringToObject })
     product: mongoose.Types.ObjectId;
 
     @Prop({ required: true, trim: true })
