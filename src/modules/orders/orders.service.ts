@@ -118,16 +118,14 @@ export class OrdersService {
             as: "categories"
           }
         },
-
         {
           $group: {
             _id: '$orderDetail.product',
-            // product: { $addToSet: '$products.name' },
-            // category: { $addToSet: '$categories.name' },
+            product: { $addToSet: '$products.name' },
+            category: { $addToSet: '$categories.name' },
             total: { $sum: { $toDouble: '$orderDetail.quantity' } },
           }
         },
-        // { $project: { 'products.name': 1, 'categories.name': 1, total: 1 } },
         { $sort: { total: -1 } },
         { $limit: 5 }
       ])
