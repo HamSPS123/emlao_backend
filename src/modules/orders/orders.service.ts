@@ -127,7 +127,7 @@ export class OrdersService {
             total: { $sum: { $toDouble: '$orderDetail.quantity' } },
           }
         },
-        { $project: { 'products.name': 1, 'categories.name': 1, total: 1 } },
+        // { $project: { 'products.name': 1, 'categories.name': 1, total: 1 } },
         { $sort: { total: -1 } },
         { $limit: 5 }
       ])
