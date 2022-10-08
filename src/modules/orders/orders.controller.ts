@@ -29,6 +29,12 @@ export class OrdersController {
     return await this.ordersService.custFindAll(cust);
   }
 
+  @Get('sales')
+  async test(@Req() req): Promise<Order[]> {
+    const shop = req.user;
+    return await this.ordersService.test(shop);
+  }
+
   @Get(':id')
   async findOne(@Req() req, @Param('id') id: string): Promise<Order> {
     const shop = req.user;
