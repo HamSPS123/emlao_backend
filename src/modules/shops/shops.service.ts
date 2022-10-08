@@ -33,6 +33,23 @@ export class ShopsService {
     }
   }
 
+  async findAll(): Promise<Shop[]> {
+    try {
+      const populate = {path: 'account', select: 'accountNo pin username role'}
+      const shops = await this.shopModel.find().populate(populate).exec();
+
+      if(!shops){
+        throw new NotFoundException(errorMessages[404]);
+      }
+
+      return shops;
+    } catch (error) {
+      if(error.status) throw new HttpException(error.message, error.status);
+      
+      throw new InternalServerErrorException(errorMessages[500])
+    }
+  }
+
   async findOne(id: string): Promise<Shop> {
     try {
       if (!isValidObjectId(id)) {
