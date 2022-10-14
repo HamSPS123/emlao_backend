@@ -1,5 +1,5 @@
-import { BadRequestException } from '@nestjs/common';
 /* eslint-disable prettier/prettier */
+import { BadRequestException } from '@nestjs/common';
 import { ConflictException, HttpException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import * as moment from 'moment';
 import * as argon2 from 'argon2';

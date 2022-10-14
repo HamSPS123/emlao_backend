@@ -8,6 +8,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { StocksService } from './stocks.service';
 import { CreateStockDto } from './dto/create-stock.dto';
@@ -20,23 +21,27 @@ export class StocksController {
   constructor(private readonly stocksService: StocksService) { }
 
   @Post()
-  async create(@Body() createStockDto: CreateStockDto) {
-    return await this.stocksService.create(createStockDto);
+  async create(@Req() req, @Body() createStockDto: CreateStockDto) {
+    const shop = req.user;
+    return await this.stocksService.create(shop, createStockDto);
   }
 
   @Get()
-  findAll() {
-    return this.stocksService.findAll();
+  findAll(@Req() req) {
+    const shop = req.user;
+    return this.stocksService.findAll(shop);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.stocksService.findOne(id);
+  findOne(@Req() req, @Param('id') id: string) {
+    const shop = req.user;
+    return this.stocksService.findOne(shop, id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateStockDto: UpdateStockDto) {
-    return this.stocksService.update(id, updateStockDto);
+  update(@Req() req, @Param('id') id: string, @Body() updateStockDto: UpdateStockDto) {
+    const shop = req.user;
+    return this.stocksService.update(shop, id, updateStockDto);
   }
 
   @Delete(':id')

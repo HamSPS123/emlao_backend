@@ -16,8 +16,14 @@ export class Payment {
     @Prop({ required: true, ref: 'Method' })
     method: mongoose.Types.ObjectId;
 
+    @Prop({ default: '' })
+    description: string;
+
     @Prop({ default: 0, get: decimalToJson })
     amountPaid: mongoose.Schema.Types.Decimal128;
+
+    @Prop({ default: Date.now })
+    createdAt: Date;
 
 }
 

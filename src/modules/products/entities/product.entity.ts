@@ -5,6 +5,11 @@ import { decimalToJson } from "src/common/utils/mongo-getter";
 
 export type ProductDocument = Product & Document;
 
+@Schema({ _id: false })
+export class Image {
+    @Prop({ default: '' })
+    coverPhoto: string;
+}
 
 @Schema({
     collection: 'products', timestamps: false, versionKey: false,
@@ -22,6 +27,9 @@ export class Product {
 
     @Prop({ trim: true, default: '' })
     qrcode: string;
+
+    @Prop({ type: Image, default: () => ({}) })
+    images: Image;
 
     @Prop({ required: true, trim: true })
     name: string;

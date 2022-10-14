@@ -45,9 +45,6 @@ export class Order {
     createdAt: Date;
 
     @Prop({ default: '' })
-    datePay: Date;
-
-    @Prop({ default: '' })
     dateDelivered: Date;
 }
 

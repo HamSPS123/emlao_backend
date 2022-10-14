@@ -8,6 +8,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { UnitsService } from './units.service';
 import { CreateUnitDto } from './dto/create-unit.dto';
@@ -21,30 +22,33 @@ export class UnitsController {
   constructor(private readonly unitsService: UnitsService) { }
 
   @Post()
-  async create(@Body() createDto: CreateUnitDto): Promise<Unit> {
-    return await this.unitsService.create(createDto);
+  async create(@Req() req, @Body() createDto: CreateUnitDto): Promise<Unit> {
+    const shop = req.user;
+    return await this.unitsService.create(shop, createDto);
   }
 
   @Get()
-  async findAll(): Promise<Unit[]> {
-    return await this.unitsService.findAll();
+  async findAll(@Req() req): Promise<Unit[]> {
+    const shop = req.user;
+    return await this.unitsService.findAll(shop);
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<Unit> {
-    return await this.unitsService.findOne(id);
+  async findOne(@Req() req, @Param('id') id: string): Promise<Unit> {
+    const shop = req.user;
+    return await this.unitsService.findOne(shop, id);
   }
 
   @Patch(':id')
-  async update(
-    @Param('id') id: string,
-    @Body() updateDto: UpdateUnitDto,
+  async update(@Req() req, @Param('id') id: string, @Body() updateDto: UpdateUnitDto,
   ): Promise<Unit> {
-    return await this.unitsService.update(id, updateDto);
+    const shop = req.user;
+    return await this.unitsService.update(shop, id, updateDto);
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string): Promise<boolean> {
-    return await this.unitsService.remove(id);
+  async remove(@Req() req, @Param('id') id: string): Promise<boolean> {
+    const shop = req.user;
+    return await this.unitsService.remove(shop, id);
   }
 }

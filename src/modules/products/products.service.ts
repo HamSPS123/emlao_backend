@@ -12,11 +12,9 @@ import { Product, ProductDocument } from './entities/product.entity';
 import * as moment from 'moment';
 import { User } from 'src/core/users/entities/user.entity';
 
-
 @Injectable()
 export class ProductsService {
   constructor(@InjectModel(Product.name) private productModel: Model<ProductDocument>) { }
-
 
   async create(createDto: CreateProductDto, user: User): Promise<Product> {
     try {
@@ -64,7 +62,7 @@ export class ProductsService {
       const populate = { path: 'category', select: '-_id name description', model: 'Category' };
       const shopId = new mongoose.Types.ObjectId(user?._id);
       const filter = { shop: shopId };
-      const products = this.productModel.find(filter).populate(populate).exec();
+      const products = await this.productModel.find(filter).populate(populate).exec();
 
       return products;
     } catch (error) {
@@ -77,7 +75,7 @@ export class ProductsService {
       if (!isValidObjectId(id)) {
         throw new BadRequestException(errorMessages[400]);
       } else {
-        const populate = { path: 'category', select: '-_id name description', model: 'Category' };
+        const populate = { path: 'category', select: '_id name description', model: 'Category' };
         const product = await this.productModel.findById(id).populate(populate).exec();
 
         if (!product) {
@@ -102,7 +100,6 @@ export class ProductsService {
       } else {
         const now = new Date();
         const fullDate = moment(now).format(dateFormat.format1);
-
         const update = { ...updateDto, updatedAt: moment.utc(fullDate) };
         const filter = { _id: id };
         const result = await this.productModel.updateOne(filter, update).exec();

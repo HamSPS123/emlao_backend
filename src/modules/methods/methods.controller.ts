@@ -24,18 +24,20 @@ export class MethodsController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<Method> {
-    return await this.methodsService.findOne(id);
+  async findOne(@Req() req, @Param('id') id: string): Promise<Method> {
+    const shop = req.user;
+    return await this.methodsService.findOne(shop, id);
   }
 
   @Patch(':id')
-  async update(@Req() req, @Param('id') id: string, @Body() updateMethodDto: UpdateMethodDto) {
-    const shop = req.user; /// error  sevice
-    return await this.methodsService.update(id, updateMethodDto, shop);
+  async update(@Req() req, @Param('id') id: string, @Body() updateMethodDto: UpdateMethodDto): Promise<Method> {
+    const shop = req.user;
+    return await this.methodsService.update(shop, id, updateMethodDto,);
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string): Promise<boolean> {
-    return await this.methodsService.remove(id);
+  async remove(@Req() req, @Param('id') id: string): Promise<boolean> {
+    const shop = req.user;
+    return await this.methodsService.remove(shop, id);
   }
 }

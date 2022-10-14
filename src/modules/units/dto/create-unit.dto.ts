@@ -5,9 +5,6 @@ export class CreateUnitDto {
     @IsNotEmpty()
     code: string;
 
-    @IsNotEmpty()
-    name: string;
-
     @IsOptional()
-    description: string;
+    name: string;
 }

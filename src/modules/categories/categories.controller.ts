@@ -24,8 +24,9 @@ export class CategoriesController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<Category> {
-    return await this.categoriesService.findOne(id);
+  async findOne(@Req() req, @Param('id') id: string): Promise<Category> {
+    const shop = req.user;
+    return await this.categoriesService.findOne(shop, id);
   }
 
   @Patch(':id')
@@ -35,7 +36,8 @@ export class CategoriesController {
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string): Promise<boolean> {
-    return await this.categoriesService.remove(id);
+  async remove(@Req() req, @Param('id') id: string): Promise<boolean> {
+    const shop = req.user;
+    return await this.categoriesService.remove(shop, id);
   }
 }

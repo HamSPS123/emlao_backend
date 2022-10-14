@@ -18,7 +18,7 @@ export class CategoriesService {
 
   async create(shop: any, createDto: CreateCategoryDto): Promise<Category> {
     try {
-      const isExist = await this.checkName(createDto.name, shop);
+      const isExist = await this.checkName(shop, createDto.name);
       if (isExist) {
         throw new ConflictException(errorMessages[409]);
       } else {
@@ -37,9 +37,7 @@ export class CategoriesService {
         return result;
       }
     } catch (error) {
-      if (error.status) {
-        throw new HttpException(error.message, error.status);
-      }
+      if (error.status) throw new HttpException(error.message, error.status);
       throw new InternalServerErrorException(errorMessages[500]);
     }
   }
@@ -49,81 +47,82 @@ export class CategoriesService {
       const populate = { path: 'shop', select: 'name' };
       const filter = { shop: shop?._id };
       const sortBy: any = { name: 1 };
-      const categories = this.categoryModel.find(filter)
-        .populate(populate).sort(sortBy).exec();
+      const categories = await this.categoryModel
+        .find(filter)
+        .populate(populate)
+        .sort(sortBy)
+        .exec();
 
-      return categories;
+      if (categories) return categories;
+      throw new NotFoundException(errorMessages[404]);
     } catch (error) {
+      if (error.status) throw new HttpException(error.message, error.status);
       throw new InternalServerErrorException(errorMessages[500]);
     }
   }
 
-  async findOne(id: string): Promise<Category> {
+  async findOne(shop: any, id: string): Promise<Category> {
     try {
       if (!isValidObjectId(id)) {
         throw new BadRequestException(errorMessages[400]);
       } else {
         const populate = { path: 'shop', select: 'name' };
-        const category = await this.categoryModel.findById(id)
-          .populate(populate).exec();
-        if (category) {
-          return category;
-        }
+        const filter = { shop: shop?._id, _id: id };
+        const sortBy: any = { name: 1 };
+        const category = await this.categoryModel
+          .findOne(filter)
+          .populate(populate)
+          .sort(sortBy)
+          .exec();
+
+        if (category) return category;
         throw new NotFoundException(errorMessages[404]);
       }
     } catch (error) {
-      if (error.status) {
-        throw new HttpException(error.message, error.status);
-      }
-
+      if (error.status) throw new HttpException(error.message, error.status);
       throw new InternalServerErrorException(errorMessages[500]);
     }
   }
 
   async update(shop: any, id: string, updateDto: UpdateCategoryDto) {
     try {
-      const isExist = await this.checkName(updateDto.name, shop);
-      if (!isValidObjectId(id)) {
-        throw new BadRequestException(errorMessages[400]);
-      } else if (isExist) {
+      const isExist = await this.checkName(shop, updateDto.name);
+
+      if (isExist) {
         throw new ConflictException(errorMessages[409]);
       } else {
-        const now = new Date();
-        const fullDate = moment(now).format(dateFormat.format1);
-        const update = { ...updateDto, updatedAt: moment.utc(fullDate) };
-        const filter = { _id: id };
-        const result = await this.categoryModel.updateOne(filter, update).exec();
+        if (!isValidObjectId(id)) {
+          throw new BadRequestException(errorMessages[400]);
+        } else {
+          const now = new Date();
+          const fullDate = moment(now).format(dateFormat.format1);
+          const update = { ...updateDto, updatedAt: moment.utc(fullDate) };
+          const filter = { shop: shop?._id, _id: id };
+          const result = await this.categoryModel.updateOne(filter, update).exec();
 
-        if (result.modifiedCount) {
-          const category = await this.findOne(id);
+          if (result.modifiedCount) {
+            const category = await this.findOne(shop, id);
 
-          if (category) {
-            return category;
+            if (category) return category;
+            throw new NotFoundException(errorMessages[400]);
           }
-
-          throw new NotFoundException(errorMessages[400]);
         }
       }
     } catch (error) {
-      if (error.status) {
-        throw new HttpException(error.message, error.status);
-      }
+      if (error.status) throw new HttpException(error.message, error.status);
       throw new InternalServerErrorException(errorMessages[500]);
     }
   }
 
-  async remove(id: string): Promise<boolean> {
+  async remove(shop: any, id: string): Promise<boolean> {
     try {
       if (!isValidObjectId(id)) {
         throw new BadRequestException(errorMessages[400]);
       } else {
-        const filter = { _id: id };
+        const filter = { shop: shop?._id, _id: id };
         const resutl = await this.categoryModel.deleteOne(filter).exec();
 
-        if (resutl.deletedCount) {
-          return true;
-        }
-
+        if (resutl.deletedCount) return true;
         return false;
       }
     } catch (error) {
@@ -131,9 +130,9 @@ export class CategoriesService {
     }
   }
 
-  async checkName(name: string, shop: any): Promise<number> {
+  async checkName(shop: any, name: string): Promise<number> {
     try {
-      const filter = { name: name, shop: shop?._id };
+      const filter = { shop: shop?._id, name: name, };
       const count = await this.categoryModel.countDocuments(filter).exec();
       return count;
     } catch (error) {

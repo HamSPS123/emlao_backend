@@ -54,11 +54,76 @@ export class ShopsService {
 
     } catch (error) {
       console.log(error);
-      
+
       if (error.status) {
         throw new HttpException(error.message, error.status);
       }
 
+      throw new InternalServerErrorException(errorMessages[500]);
+    }
+  }
+
+  async searchOne(query: string) {
+    try {
+      const search = query
+      const rgx = (pattern) => new RegExp(`.*${pattern}.*`);
+      const searchRgx = rgx(search);
+      const result = await this.shopModel.aggregate([
+        {
+          $lookup: {
+            from: "products",
+            localField: "_id",
+            foreignField: "shop",
+            as: "products",
+          }
+        },
+        { $unwind: '$products' },
+        {
+          $lookup: {
+            from: "categories",
+            localField: "products.category",
+            foreignField: "_id",
+            as: "categories"
+          }
+        },
+        { $unwind: '$categories' },
+        {
+          $match: {
+            $or: [
+              {
+                'name': { $regex: searchRgx, $options: "i" },
+              },
+              {
+                'products.name': { $regex: searchRgx, $options: "i" },
+              },
+              {
+                'products.name': { $regex: searchRgx, $options: "i" },
+              }
+            ]
+          }
+        },
+        {
+          $project: {
+            'name': 1,
+            productName: '$products.name',
+            categoryName: '$categories.name'
+          }
+        }
+      ])
+
+
+
+      if (!result) {
+        throw new NotFoundException(errorMessages[404]);
+      }
+      return result;
+
+    } catch (error) {
+      console.log(error);
+
+      if (error.status) {
+        throw new HttpException(error.message, error.status);
+      }
       throw new InternalServerErrorException(errorMessages[500]);
     }
   }

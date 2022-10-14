@@ -12,6 +12,9 @@ export type StockDocument = Stock & Document;
     toJSON: { getters: true },
 })
 export class Stock {
+    @Prop({ required: true, ref: 'Shop' })
+    shop: mongoose.Types.ObjectId;
+
     @Prop({ required: true, ref: 'Product' })
     product: mongoose.Types.ObjectId;
 
@@ -19,10 +22,16 @@ export class Stock {
     unit: mongoose.Types.ObjectId;
 
     @Prop({ required: true, get: decimalToJson })
-    quantity: mongoose.Schema.Types.Decimal128;
+    startQuantity: mongoose.Schema.Types.Decimal128;
+
+    @Prop({ get: decimalToJson })
+    received: mongoose.Schema.Types.Decimal128;
+
+    @Prop({ get: decimalToJson })
+    shipped: mongoose.Schema.Types.Decimal128;
 
     @Prop({ required: true })
-    alert: number;
+    minimumRequired: number;
 
     @Prop({ default: Date.now })
     createdAt: Date;

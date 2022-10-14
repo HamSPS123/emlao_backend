@@ -30,9 +30,9 @@ export class OrdersController {
   }
 
   @Get('sales')
-  async test(@Req() req): Promise<Order[]> {
+  async bestSale(@Req() req): Promise<Order[]> {
     const shop = req.user;
-    return await this.ordersService.test(shop);
+    return await this.ordersService.bestSale(shop);
   }
 
   @Get(':id')

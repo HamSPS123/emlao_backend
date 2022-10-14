@@ -47,7 +47,7 @@ export class OrdersService {
       const populate = { path: 'shop', select: 'name' };
       const filter = { shop: shop?._id };
       const sortBy: any = { name: 1 };
-      const orders = this.orderModel.find(filter)
+      const orders = await this.orderModel.find(filter)
         .populate(populate).sort(sortBy).exec();
 
       return orders;
@@ -95,12 +95,11 @@ export class OrdersService {
     }
   }
 
-  async test(shop: any) {
+  async bestSale(shop: any) {
     try {
-      const filter = { shop: shop?._id };
       const test = this.orderModel.aggregate([
+        { $match: { shop: shop?._id } },
         { $unwind: '$orderDetail' },
-        { $match: filter },
         {
           $lookup: {
             from: "products",
@@ -118,13 +117,14 @@ export class OrdersService {
             as: "categories"
           }
         },
+        { $unwind: '$categories' },
         {
           $group: {
             _id: '$orderDetail.product',
-            product: { $addToSet: '$products.name' },
-            category: { $addToSet: '$categories.name' },
+            productName: { $first: '$products.name' },
+            categoryName: { $first: '$categories.name' },
             total: { $sum: { $toDouble: '$orderDetail.quantity' } },
-          }
+          },
         },
         { $sort: { total: -1 } },
         { $limit: 5 }

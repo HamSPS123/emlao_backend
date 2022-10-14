@@ -24,10 +24,9 @@ export class MethodsService {
 
   async create(shop: any, createDto: CreateMethodDto): Promise<Method> {
     try {
-      const isExist = await this.checkMethod(createDto.name, shop);
-
+      const isExist = await this.checkMethod(shop, createDto.name);
       if (isExist) {
-        throw new ConflictException('ອີເມລນີ້ຖືກນຳໃຊ້ແລ້ວ, ກະລຸນາລອງອີເມລອື່ນ');
+        throw new ConflictException(errorMessages[409]);
       } else {
         const now = new Date();
         const fullDate = moment(now).format(dateFormat.format1);
@@ -45,58 +44,59 @@ export class MethodsService {
         return result;
       }
     } catch (error) {
+      if (error.status) throw new HttpException(error.message, error.status);
       throw new InternalServerErrorException(errorMessages[500]);
     }
   }
+
   async findAll(shop: any): Promise<Method[]> {
     try {
       const populate = { path: 'shop', select: 'name' };
       const filter = { shop: shop?._id };
       const sortBy: any = { name: 1 };
-      const method = this.methodModel
+      const method = await this.methodModel
         .find(filter)
         .populate(populate)
         .sort(sortBy)
         .exec();
 
-      return method;
+      if (method) return method;
+      throw new NotFoundException(errorMessages[404]);
     } catch (error) {
+      if (error.status) throw new HttpException(error.message, error.status);
       throw new InternalServerErrorException(errorMessages[500]);
     }
   }
 
-  async findOne(id: string): Promise<Method> {
+  async findOne(shop: any, id: string): Promise<Method> {
     try {
       if (!isValidObjectId(id)) {
         throw new BadRequestException(errorMessages[400]);
       } else {
         const populate = { path: 'shop', select: 'name' };
+        const filter = { shop: shop?._id, _id: id };
+        const sortBy: any = { name: 1 };
         const method = await this.methodModel
-          .findById(id)
+          .findOne(filter)
           .populate(populate)
+          .sort(sortBy)
           .exec();
 
-        if (method) {
-          return method;
-        }
-
+        if (method) return method;
         throw new NotFoundException(errorMessages[404]);
       }
     } catch (error) {
-      if (error.status) {
-        throw new HttpException(error.message, error.status);
-      }
-
+      if (error.status) throw new HttpException(error.message, error.status);
       throw new InternalServerErrorException(errorMessages[500]);
     }
   }
 
-  async update(id: string, updateDto: UpdateMethodDto, shop: any) {
+  async update(shop: any, id: string, updateDto: UpdateMethodDto): Promise<Method> {
     try {
-      const isExist = await this.checkMethod(updateDto.name, shop);
+      const isExist = await this.checkMethod(shop, updateDto.name);
 
       if (isExist) {
-        throw new ConflictException('ອີເມລນີ້ຖືກນຳໃຊ້ແລ້ວ, ກະລຸນາລອງອີເມລອື່ນ');
+        throw new ConflictException(errorMessages[409]);
       } else {
         if (!isValidObjectId(id)) {
           throw new BadRequestException(errorMessages[400]);
@@ -104,19 +104,14 @@ export class MethodsService {
           const now = new Date();
           const fullDate = moment(now).format(dateFormat.format1);
           const update = { ...updateDto, updatedAt: moment.utc(fullDate) };
-          const filter = { _id: id };
-          const resutl = await this.methodModel
-            .updateOne(filter, update)
-            .exec();
+          const filter = { shop: shop?._id, _id: id };
+          const result = await this.methodModel.updateOne(filter, update).exec();
 
-          if (resutl.modifiedCount) {
-            const method = await this.findOne(id);
+          if (result.modifiedCount) {
+            const method = await this.findOne(shop, id);
 
-            if (method) {
-              return method;
-            }
-
-            throw new NotFoundException(errorMessages[400]);
+            if (method) return method;
+            throw new NotFoundException(errorMessages[404]);
           }
         }
       }
@@ -126,34 +121,30 @@ export class MethodsService {
     }
   }
 
-  async remove(id: string): Promise<boolean> {
+  async remove(shop: any, id: string): Promise<boolean> {
     try {
       if (!isValidObjectId(id)) {
         throw new BadRequestException(errorMessages[400]);
       } else {
-        const filter = { _id: id };
-        const resutl = await this.methodModel.deleteOne(filter).exec();
+        const filter = { shop: shop?._id, _id: id };
+        const result = await this.methodModel.deleteOne(filter).exec();
 
-        if (resutl.deletedCount) {
-          return true;
-        }
-
+        if (result.deletedCount) return true;
         return false;
+
       }
     } catch (error) {
       throw new InternalServerErrorException(errorMessages[500]);
     }
   }
 
-  /// error
-  async checkMethod(name: string, shop: any): Promise<number> {
+  async checkMethod(shop: any, name: string): Promise<number> {
     try {
-      const filter = { name: name, shop: shop?._id };
+      const filter = { shop: shop?._id, name: name };
       const count = await this.methodModel.countDocuments(filter).exec();
       return count;
     } catch (error) {
-      throw new InternalServerErrorException('ບໍ່ສາມາດດຳເນີນການໄດ້!');
+      throw new InternalServerErrorException(errorMessages[500]);
     }
-
   }
 }
