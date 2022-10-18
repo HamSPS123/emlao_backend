@@ -130,6 +130,22 @@ export class CategoriesService {
     }
   }
 
+  async removeMany(shop: any, id: string): Promise<boolean> {
+    try {
+      if (!isValidObjectId(id)) {
+        throw new BadRequestException(errorMessages[400]);
+      } else {
+        const filter = { shop: shop?._id, _id: id };
+        const resutl = await this.categoryModel.deleteOne(filter).exec();
+
+        if (resutl.deletedCount) return true;
+        return false;
+      }
+    } catch (error) {
+      throw new InternalServerErrorException(errorMessages[500]);
+    }
+  }
+
   async checkName(shop: any, name: string): Promise<number> {
     try {
       const filter = { shop: shop?._id, name: name, };

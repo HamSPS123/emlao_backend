@@ -9,6 +9,7 @@ import { Employee, EmployeeDocument } from './entities/employee.entity';
 import { Model } from 'mongoose';
 import { errorMessages } from 'src/config/message.config';
 
+
 @Injectable()
 export class EmployeesService {
   constructor(@InjectModel(Employee.name) private employeeModel: Model<EmployeeDocument>) { }

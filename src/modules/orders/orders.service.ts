@@ -10,6 +10,7 @@ import mongoose, { isValidObjectId, Model } from 'mongoose';
 import { errorMessages } from 'src/config/message.config';
 import { User } from 'src/core/users/entities/user.entity';
 import { randomNumber } from 'src/common/utils/utils';
+import { ReportOrderDetail } from './dto/report-order.dto';
 
 @Injectable()
 export class OrdersService {
@@ -97,7 +98,7 @@ export class OrdersService {
 
   async bestSale(shop: any) {
     try {
-      const test = this.orderModel.aggregate([
+      const result = this.orderModel.aggregate([
         { $match: { shop: shop?._id } },
         { $unwind: '$orderDetail' },
         {
@@ -129,9 +130,55 @@ export class OrdersService {
         { $sort: { total: -1 } },
         { $limit: 5 }
       ])
-      return test;
+      return result;
     } catch (error) {
       console.log(error);
+      throw new InternalServerErrorException(errorMessages[500]);
+    }
+  }
+
+  async reportSales(reportDto: ReportOrderDetail, shop: any) {
+    try {
+      const result = this.orderModel.aggregate([
+        { $unwind: '$orderDetail' },
+        {
+          $match: {
+            'createdAt': { $gte: new Date(reportDto.startDate), $lte: new Date(reportDto.endDate) },
+            'shop': shop?._id,
+          }
+        },
+        {
+          $lookup: {
+            from: "products",
+            localField: "orderDetail.product",
+            foreignField: "_id",
+            as: "products",
+          }
+        },
+        { $unwind: '$products' },
+        {
+          $lookup: {
+            from: "categories",
+            localField: "products.category",
+            foreignField: "_id",
+            as: "categories"
+          }
+        },
+        { $unwind: '$categories' },
+        {
+          $group: {
+            _id: { $month: "$createdAt" },
+            // _id: '$orderDetail.product',
+            // productName: { $first: '$products.name' },
+            // categoryName: { $first: '$categories.name' },
+            // quantity: { $sum: { $toDouble: '$orderDetail.quantity' } },
+            total: { $sum: { $toDouble: { $multiply: ['$orderDetail.quantity', '$orderDetail.price'] } } },
+          },
+        },
+        { $sort: { productName: -1 } },
+      ])
+      return result;
+    } catch (error) {
       throw new InternalServerErrorException(errorMessages[500]);
     }
   }

@@ -1,7 +1,6 @@
 /* eslint-disable prettier/prettier */
 import {
   BadRequestException,
-  ConflictException,
   HttpException,
   Injectable,
   InternalServerErrorException,

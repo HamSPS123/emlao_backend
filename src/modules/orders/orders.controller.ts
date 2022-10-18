@@ -5,6 +5,7 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { JwtAuthGuard } from 'src/core/auth/jwt-auth.guard';
 import { Order } from './entities/order.entity';
+import { ReportOrderDetail } from './dto/report-order.dto';
 
 @UseGuards(JwtAuthGuard)
 @Controller('orders')
@@ -33,6 +34,12 @@ export class OrdersController {
   async bestSale(@Req() req): Promise<Order[]> {
     const shop = req.user;
     return await this.ordersService.bestSale(shop);
+  }
+
+  @Post('reportSales')
+  async reportSales(@Req() req, @Body() reportDto: ReportOrderDetail): Promise<Order[]> {
+    const shop = req.user;
+    return await this.ordersService.reportSales(reportDto, shop);
   }
 
   @Get(':id')
